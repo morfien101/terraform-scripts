@@ -1,7 +1,7 @@
 {
 	"environment": "AWS Training",
-	"tf_file_path":"/aws_training_vpc",
-	"variable_path":"/aws_training_vpc",
+	"tf_file_path":"scripts/aws_training_vpc",
+	"variable_path":"scripts/aws_training_vpc",
 	"variable_files":["vpc.tfvars"],
 	"inline_variables":{
 		"aws_ssh_key_path":"${ENV['AWS_SSH_KEY_PATH']}",

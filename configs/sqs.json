@@ -1,0 +1,19 @@
+{
+	"environment": "AWS Training",
+	"tf_file_path":"scripts/aws_training_sqs",
+	"variable_path":"scripts/aws_training_sqs",
+	"variable_files":["sqs.tfvars"],
+	"inline_variables":{
+		"aws_ssh_key_path":"${ENV['AWS_SSH_KEY_PATH']}",
+		"aws_ssh_key_name": "randy_aws_training.pem"
+	},
+	"state_file":{
+		"type":"s3",
+		"config": {
+			"region":"us-east-1",
+			"bucket":"randy-terraform-bucket",
+			"key":"aws_training/sqs/terraform.tfstate"
+		}
+	},
+	"custom_args":["-parallelism=10"]
+}

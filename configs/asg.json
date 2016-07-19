@@ -1,0 +1,19 @@
+{
+	"environment": "AWS Training",
+	"tf_file_path":"scripts/aws_training_asg",
+	"variable_path":"scripts/aws_training_asg",
+	"variable_files":["asg.tfvars"],
+	"inline_variables":{
+		"aws_ssh_key_path":"${ENV['AWS_SSH_KEY_PATH']}",
+		"aws_ssh_key_name": "${ENV['AWS_SSH_KEY_NAME']}"
+	},
+	"state_file":{
+		"type":"s3",
+		"config": {
+			"region":"us-east-1",
+			"bucket":"randy-terraform-bucket",
+			"key":"aws_training/asg/terraform.tfstate"
+		}
+	},
+	"custom_args":["-parallelism=10"]
+}

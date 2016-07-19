@@ -89,6 +89,10 @@ resource "aws_route_table_association" "private" {
     route_table_id ="${element(aws_route_table.private_routes.*.id,count.index)}"
 }
 
+output "aws_vpc_vpc1_id" {
+    value = "${aws_vpc.vpc1.id}"
+}
+
 output "public_subnets" {
     value="${join(",",aws_subnet.public.*.id)}"
 }

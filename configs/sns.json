@@ -4,8 +4,7 @@
 	"variable_path":"scripts/aws_training_sns",
 	"variable_files":["sns.tfvars"],
 	"inline_variables":{
-		"aws_ssh_key_path":"${ENV['AWS_SSH_KEY_PATH']}",
-		"aws_ssh_key_name": "randy_aws_training.pem"
+		"tfstate_bucket": "randy-terraform-bucket"
 	},
 	"state_file":{
 		"type":"s3",

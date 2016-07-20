@@ -125,3 +125,7 @@ resource "aws_autoscaling_notification" "webservers" {
   	]
   	topic_arn = "${terraform_remote_state.sns.output.aws_sns_topic_autoscale_notifications_arn}"
 }
+
+output "aws_elb_webserver_elb_dns_name" {
+	value = "${aws_elb.webserver-elb.dns_name}"
+}

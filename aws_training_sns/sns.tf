@@ -1,5 +1,4 @@
 variable "vpc_region" {}
-variable "sqs_queue_name" {}
 variable "tfstate_bucket" {}
 
 provider "aws" {

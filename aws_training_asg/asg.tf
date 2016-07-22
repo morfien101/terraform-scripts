@@ -45,7 +45,7 @@ resource "aws_security_group" "webserver-elb" {
 
 resource "aws_elb" "webserver-elb" {
 	name="webserver-elb"
-	subnets=["${split(",",terraform_remote_state.vpc.output.public_subnets)}"]
+	subnets=["${split(",",terraform_remote_state.vpc.output.private_subnets)}"]
 	cross_zone_load_balancing = true
 	idle_timeout = 60
 	security_groups=["${aws_security_group.webserver-elb.id}"]
@@ -59,7 +59,7 @@ resource "aws_elb" "webserver-elb" {
 		healthy_threshold = 2
 		unhealthy_threshold = 2
 		timeout = 2
-		target="HTTP:80/"
+		target="HTTP:80/index.html"
 		interval=10
 	}
 	tags {
@@ -96,7 +96,7 @@ resource "aws_launch_configuration" "web-servers" {
 	user_data=<<EOF
 #!/bin/bash
 yum install httpd -y
-echo $(hostname) >> /var/www/html/index.html
+echo $(hostname) >> /var/www/index.html
 service httpd start
 chkconfig httpd on
 EOF
@@ -112,7 +112,7 @@ resource "aws_autoscaling_group" "webservers" {
 	desired_capacity=6
 	health_check_grace_period=300
 	launch_configuration="${aws_launch_configuration.web-servers.name}"
-	vpc_zone_identifier=["${split(",",terraform_remote_state.vpc.output.public_subnets)}"]
+	vpc_zone_identifier=["${split(",",terraform_remote_state.vpc.output.private_subnets)}"]
 	load_balancers=["${aws_elb.webserver-elb.id}"]
 }
 

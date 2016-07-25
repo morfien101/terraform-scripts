@@ -25,6 +25,15 @@ resource "terraform_remote_state" "sns" {
 	}
 }
 
+resource "terraform_remote_state" "bastion" {
+	backend = "s3"
+	config {
+		region = "${var.vpc_region}"
+		bucket = "${var.tfstate_bucket}"
+		key = "aws_training/bastion/terraform.tfstate"
+	}
+}
+
 resource "aws_security_group" "webserver-elb" {
 	name="webserver_elb"
 	description="traffic from the internet to the webservers"
@@ -45,7 +54,7 @@ resource "aws_security_group" "webserver-elb" {
 
 resource "aws_elb" "webserver-elb" {
 	name="webserver-elb"
-	subnets=["${split(",",terraform_remote_state.vpc.output.private_subnets)}"]
+	subnets=["${split(",",terraform_remote_state.vpc.output.public_subnets)}"]
 	cross_zone_load_balancing = true
 	idle_timeout = 60
 	security_groups=["${aws_security_group.webserver-elb.id}"]
@@ -70,7 +79,7 @@ resource "aws_elb" "webserver-elb" {
 }
 
 resource "aws_security_group" "webservers-sg" {
-	name="webserver_allow_from_elb"
+	name="webserver_allow_from_internal"
 	description="Allow traffic from the ELBs to the web servers"
 	vpc_id="${terraform_remote_state.vpc.output.aws_vpc_vpc1_id}"
 	egress {
@@ -85,6 +94,18 @@ resource "aws_security_group" "webservers-sg" {
 		protocol="tcp"
 		security_groups=["${aws_security_group.webserver-elb.id}"]
 	}
+	ingress {
+		from_port=22
+		to_port=22
+		protocol="tcp"
+		security_groups=["${terraform_remote_state.bastion.output.aws_security_group_bastion_id}"]
+	}
+	ingress {
+		from_port=80
+		to_port=80
+		protocol="tcp"
+		security_groups=["${terraform_remote_state.bastion.output.aws_security_group_bastion_id}"]
+	}
 }
 
 resource "aws_launch_configuration" "web-servers" {
@@ -95,9 +116,11 @@ resource "aws_launch_configuration" "web-servers" {
 	security_groups=["${aws_security_group.webservers-sg.id}"]
 	user_data=<<EOF
 #!/bin/bash
+yum clean all && yum makecache
 yum install httpd -y
-echo $(hostname) >> /var/www/index.html
-service httpd start
+sed -i 's/Listen 80/Listen 0.0.0.0:80/' /etc/httpd/conf/httpd.conf
+echo "<html><head><title>RANDY AWS TRAINING</title></head><body><h1>$(hostname)</h1></body></html>" > /var/www/html/index.html
+service httpd restart
 chkconfig httpd on
 EOF
 	lifecycle {

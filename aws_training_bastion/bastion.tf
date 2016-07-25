@@ -51,3 +51,6 @@ output "aws_instance_bastion_host_public_ip" {
 output "aws_instance_bastion_host_public_dns" {
     value = "${aws_instance.bastion_host.public_dns}"
 }
+output "aws_security_group_bastion_id" {
+    value = "${aws_security_group.bastion.id}"
+}

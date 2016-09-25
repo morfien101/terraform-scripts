@@ -1,12 +1,14 @@
 variable "vpc_region" {}
 variable "tfstate_bucket" {}
-variable "ami_id" {}
+variable "rds_username" {}
+variable "rds_password" {}
+variable "rds_size" {}
 
 provider "aws" {
     region = "${var.vpc_region}"
 }
 
-resource "terraform_remote_state" "vpc" {
+data "terraform_remote_state" "vpc" {
 	backend = "s3"
 	config {
 		region = "${var.vpc_region}"
@@ -17,7 +19,7 @@ resource "terraform_remote_state" "vpc" {
 
 resource "aws_db_subnet_group" "rds_subnets" {
     name = "main"
-    subnet_ids = ["${split(",",terraform_remote_state.vpc.output.public_subnets)}"]
+    subnet_ids = ["${split(",",data.terraform_remote_state.vpc.public_subnets)}"]
     tags {
         Name = "RDS Subnets"
     }
@@ -26,7 +28,7 @@ resource "aws_db_subnet_group" "rds_subnets" {
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"
-  engine_version       = "5.6.17"
+  engine_version       = "5.6"
   instance_class       = "${var.rds_size}"
   name                 = "mydb"
   username             = "${var.rds_username}"

@@ -1,12 +1,13 @@
 variable "vpc_region" {}
 variable "tfstate_bucket" {}
 variable "ami_id" {}
+variable "aws_ssh_key_name" {}
 
 provider "aws" {
     region = "${var.vpc_region}"
 }
 
-resource "terraform_remote_state" "vpc" {
+data "terraform_remote_state" "vpc" {
 	backend = "s3"
 	config {
 		region = "${var.vpc_region}"
@@ -18,7 +19,7 @@ resource "terraform_remote_state" "vpc" {
 resource "aws_security_group" "bastion" {
     name="bastion_hosts"
     description="Allows ssh to bastion hosts"
-    vpc_id="${terraform_remote_state.vpc.output.aws_vpc_vpc1_id}"
+    vpc_id="${data.terraform_remote_state.vpc.aws_vpc_vpc1_id}"
     egress {
         from_port=0
         to_port=0
@@ -37,8 +38,9 @@ resource "aws_security_group" "bastion" {
 resource "aws_instance" "bastion_host" {
     ami = "${var.ami_id}"
     instance_type = "t2.micro"
-    subnet_id="${element(split(",",terraform_remote_state.vpc.output.public_subnets), 1)}"
+    subnet_id="${element(split(",",data.terraform_remote_state.vpc.public_subnets), 1)}"
     vpc_security_group_ids=["${aws_security_group.bastion.id}"]
+    key_name = "${var.aws_ssh_key_name}"
     tags = {
         Name="Randy-Bastion"
     }

@@ -13,7 +13,7 @@
 		"config": {
 			"region":"us-east-1",
 			"bucket":"randy-terraform-bucket",
-			"key":"aws_training/bastion/terraform.tfstate"
+			"key":"aws_training/rds/terraform.tfstate"
 		}
 	},
 	"custom_args":["-parallelism=10"]

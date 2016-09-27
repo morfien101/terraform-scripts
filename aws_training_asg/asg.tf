@@ -7,7 +7,7 @@ provider "aws" {
     region = "${var.vpc_region}"
 }
 
-resource "terraform_remote_state" "vpc" {
+data "terraform_remote_state" "vpc" {
 	backend = "s3"
 	config {
 		region = "${var.vpc_region}"
@@ -16,7 +16,7 @@ resource "terraform_remote_state" "vpc" {
 	}
 }
 
-resource "terraform_remote_state" "sns" {
+data "terraform_remote_state" "sns" {
 	backend = "s3"
 	config {
 		region = "${var.vpc_region}"
@@ -25,7 +25,7 @@ resource "terraform_remote_state" "sns" {
 	}
 }
 
-resource "terraform_remote_state" "bastion" {
+data "terraform_remote_state" "bastion" {
 	backend = "s3"
 	config {
 		region = "${var.vpc_region}"
@@ -34,10 +34,19 @@ resource "terraform_remote_state" "bastion" {
 	}
 }
 
+data "terraform_remote_state" "rds" {
+	backend = "s3"
+	config {
+		region = "${var.vpc_region}"
+		bucket = "${var.tfstate_bucket}"
+		key = "aws_training/rds/terraform.tfstate"
+	}
+}
+
 resource "aws_security_group" "webserver-elb" {
 	name="webserver_elb"
 	description="traffic from the internet to the webservers"
-	vpc_id="${terraform_remote_state.vpc.output.aws_vpc_vpc1_id}"
+	vpc_id="${data.terraform_remote_state.vpc.aws_vpc_vpc1_id}"
 	egress {
 		from_port=0
 		to_port=0
@@ -54,7 +63,7 @@ resource "aws_security_group" "webserver-elb" {
 
 resource "aws_elb" "webserver-elb" {
 	name="webserver-elb"
-	subnets=["${split(",",terraform_remote_state.vpc.output.public_subnets)}"]
+	subnets=["${split(",",data.terraform_remote_state.vpc.public_subnets)}"]
 	cross_zone_load_balancing = true
 	idle_timeout = 60
 	security_groups=["${aws_security_group.webserver-elb.id}"]
@@ -68,7 +77,7 @@ resource "aws_elb" "webserver-elb" {
 		healthy_threshold = 2
 		unhealthy_threshold = 2
 		timeout = 2
-		target="HTTP:80/index.html"
+		target="HTTP:80/index.php"
 		interval=10
 	}
 	tags {
@@ -81,7 +90,7 @@ resource "aws_elb" "webserver-elb" {
 resource "aws_security_group" "webservers-sg" {
 	name="webserver_allow_from_internal"
 	description="Allow traffic from the ELBs to the web servers"
-	vpc_id="${terraform_remote_state.vpc.output.aws_vpc_vpc1_id}"
+	vpc_id="${data.terraform_remote_state.vpc.aws_vpc_vpc1_id}"
 	egress {
 		from_port=0
 		to_port=0
@@ -98,13 +107,13 @@ resource "aws_security_group" "webservers-sg" {
 		from_port=22
 		to_port=22
 		protocol="tcp"
-		security_groups=["${terraform_remote_state.bastion.output.aws_security_group_bastion_id}"]
+		security_groups=["${data.terraform_remote_state.bastion.aws_security_group_bastion_id}"]
 	}
 	ingress {
 		from_port=80
 		to_port=80
 		protocol="tcp"
-		security_groups=["${terraform_remote_state.bastion.output.aws_security_group_bastion_id}"]
+		security_groups=["${data.terraform_remote_state.bastion.aws_security_group_bastion_id}"]
 	}
 }
 
@@ -113,13 +122,81 @@ resource "aws_launch_configuration" "web-servers" {
 	image_id="${var.ami_id}"
 	instance_type="t2.micro"
 	key_name="${var.aws_ssh_key_name}"
-	security_groups=["${aws_security_group.webservers-sg.id}"]
+	security_groups=["${aws_security_group.webservers-sg.id}","${data.terraform_remote_state.rds.aws_security_group_rds_id}"]
 	user_data=<<EOF
 #!/bin/bash
 yum clean all && yum makecache
-yum install httpd -y
+yum install -y httpd php php-mysql
 sed -i 's/Listen 80/Listen 0.0.0.0:80/' /etc/httpd/conf/httpd.conf
-echo "<html><head><title>RANDY AWS TRAINING</title></head><body><h1>$(hostname)</h1></body></html>" > /var/www/html/index.html
+cat << 'END' > /var/www/html/index.php
+<html>
+<head>
+<title>Fanta Feel the Fun!</title>
+</head>
+<body>
+<?php
+$servername = "${data.terraform_remote_state.rds.aws_db_instance_db1_address}";
+$username = "whosthat";
+$password = "donttellanyonethis";
+$dbname = "${data.terraform_remote_state.rds.aws_db_instance_db1_name}";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+//echo "<br />";
+//echo "Connected successfully";
+
+// Select 1 from table_name will return false if the table does not exist.
+$val = 'SELECT 1 from FeelTheFun LIMIT 1';
+
+if($conn->query($val) === FALSE)
+{
+    $sql_table = 'CREATE TABLE FeelTheFun (
+    id INT NOT NULL AUTO_INCREMENT,
+    colour VARCHAR(10) NOT NULL,
+    image VARCHAR(125) NOT NULL,
+    PRIMARY KEY( id ))';
+
+if ($conn->query($sql_table) === TRUE) {
+  $insert = "INSERT INTO FeelTheFun (colour, image) VALUES (
+  \"purple\", \"http://www.mrbiltong.co.uk/zoomimages/fanta-grape.jpg\"),
+  (\"orange\", \"http://www.coca-colacompany.com/content/dam/journey/us/en/private/2010/01/lg_fanta_orange_can-7d9d1164.jpg\"),
+  (\"yellow\", \"http://www.coca-colacompany.com/content/dam/journey/us/en/private/2010/01/lg_fanta_pineapple-7d9d1ab6.jpg\")";
+
+  if ($conn->query($insert) === FALSE) {
+    echo "Failed to seed DB.";
+  }
+
+} else {
+    echo "Error creating table: " . $conn->error;
+}
+}
+$sql = 'SELECT * FROM FeelTheFun WHERE `id`='.rand(1,3).' LIMIT 1';
+$result = $conn->query($sql);
+//if ($result === TRUE) {
+  if ($result->num_rows > 0 ) {
+    while($row = $result->fetch_assoc()){
+      echo "<h1 style=\"color:". $row["colour"] . "\";> Fanta Feel the Fun!!</h1>";
+      echo "<br/>";
+      echo "<img src=\"" . $row["image"] . "\" atl=\"can\">";
+      echo "<br />";
+    }
+  } else {
+    echo "0 results.";
+  }
+//} else {
+//  echo "Failed to get data";
+//}
+
+$conn->close();
+?>
+</body>
+</html>
+END
 service httpd restart
 chkconfig httpd on
 EOF
@@ -135,7 +212,7 @@ resource "aws_autoscaling_group" "webservers" {
 	desired_capacity=6
 	health_check_grace_period=300
 	launch_configuration="${aws_launch_configuration.web-servers.name}"
-	vpc_zone_identifier=["${split(",",terraform_remote_state.vpc.output.private_subnets)}"]
+	vpc_zone_identifier=["${split(",",data.terraform_remote_state.vpc.private_subnets)}"]
 	load_balancers=["${aws_elb.webserver-elb.id}"]
 }
 
@@ -146,7 +223,7 @@ resource "aws_autoscaling_notification" "webservers" {
     	"autoscaling:EC2_INSTANCE_TERMINATE",
     	"autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
   	]
-  	topic_arn = "${terraform_remote_state.sns.output.aws_sns_topic_autoscale_notifications_arn}"
+  	topic_arn = "${data.terraform_remote_state.sns.aws_sns_topic_autoscale_notifications_arn}"
 }
 
 output "aws_elb_webserver_elb_dns_name" {

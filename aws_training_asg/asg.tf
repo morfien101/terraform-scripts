@@ -207,9 +207,9 @@ EOF
 }
 
 resource "aws_autoscaling_group" "webservers" {
-	min_size=3
+	min_size=1
 	max_size=9
-	desired_capacity=6
+	desired_capacity=2
 	health_check_grace_period=300
 	launch_configuration="${aws_launch_configuration.web-servers.name}"
 	vpc_zone_identifier=["${split(",",data.terraform_remote_state.vpc.private_subnets)}"]

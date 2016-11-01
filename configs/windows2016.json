@@ -1,0 +1,20 @@
+{
+	"environment": "AWS Training",
+	"tf_file_path":"scripts/aws_windows2016",
+	"variable_path":"scripts/aws_windows2016",
+	"variable_files":["windows_containers.tfvars"],
+	"inline_variables":{
+		"aws_ssh_key_path":"c:/keys/randy-aws-training.pem",
+		"aws_ssh_key_name": "randy-aws-training",
+		"tfstate_bucket": "randy-terraform-bucket"
+	},
+	"state_file":{
+		"type":"s3",
+		"config": {
+			"region":"us-east-1",
+			"bucket":"randy-terraform-bucket",
+			"key":"aws_training/windows2016/terraform.tfstate"
+		}
+	},
+	"custom_args":["-parallelism=10"]
+}

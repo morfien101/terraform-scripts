@@ -2,7 +2,7 @@ variable "vpc_cidr" {}
 variable "vpc_region" {}
 variable "vpc_az" {}
 #We need this in other scripts to make ARNs
-variable "aws_account_number" {}
+# variable "aws_account_number" {}
 
 provider "aws" {
     region = "${var.vpc_region}"
@@ -103,6 +103,6 @@ output "private_subnets" {
     value="${join(",",aws_subnet.private.*.id)}"
 }
 
-output "aws_account_number" {
-    value="${var.aws_account_number}"
-}
+#output "aws_account_number" {
+#    value="${var.aws_account_number}"
+#}

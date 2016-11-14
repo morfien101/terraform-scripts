@@ -7,7 +7,14 @@
 		"aws_ssh_key_path": "${ENV['AWS_SSH_KEY_PATH']}",
 		"aws_ssh_key_name": "${ENV['AWS_SSH_KEY_NAME']}",
 		"tfstate_bucket": "randy-terraform-bucket",
-		"inbalance_lb": 0
+		"asg1_lb": 1,
+		"asg2_lb": 0,
+		"asg1_min_size": 1,
+		"asg1_max_size": 3,
+		"asg1_desired_capacity": 2,
+		"asg2_min_size": 1,
+		"asg2_max_size": 3,
+		"asg2_desired_capacity": 2
 	},
 	"state_file":{
 		"type":"s3",

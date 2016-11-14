@@ -3,9 +3,6 @@
 	"tf_file_path":"scripts/aws_training_vpc",
 	"variable_path":"scripts/aws_training_vpc",
 	"variable_files":["vpc.tfvars"],
-	"inline_variables":{
-		"aws_account_number":"${ENV['AWS_ACCOUNT_NUMBER']}"
-	},
 	"state_file":{
 		"type":"s3",
 		"config": {

@@ -3,8 +3,33 @@ variable "tfstate_bucket" {}
 variable "ami_id1" {}
 variable "ami_id2" {}
 variable "aws_ssh_key_name" {}
-variable "inbalance_lb" {
+
+# Variables for AutoScaling Group 1
+variable "asg1_lb" {
 	default=0
+}
+variable "asg1_min_size"{
+	default=1
+}
+variable "asg1_max_size"{
+	default=3
+}
+variable "asg1_desired_capacity"{
+	default=2
+}
+
+# Variables for AutoScaling Group 2
+variable "asg2_lb" {
+	default=1
+}
+variable "asg2_min_size"{
+	default=1
+}
+variable "asg2_max_size"{
+	default=3
+}
+variable "asg2_desired_capacity"{
+	default=2
 }
 
 provider "aws" {
@@ -174,23 +199,23 @@ resource "aws_elb" "webserver-elb2" {
 }
 
 resource "aws_autoscaling_group" "web1" {
-	min_size=1
-	max_size=3
-	desired_capacity=2
+	min_size="${var.asg1_min_size}"
+	max_size="${var.asg1_max_size}"
+	desired_capacity="${var.asg1_desired_capacity}"
 	health_check_grace_period=300
 	launch_configuration="${aws_launch_configuration.lc1.id}"
 	vpc_zone_identifier=["${split(",",data.terraform_remote_state.vpc.private_subnets)}"]
-	load_balancers=["${element(split(",", format("%s,%s",aws_elb.webserver-elb1.id,aws_elb.webserver-elb2.id)), var.inbalance_lb)}"]
+	load_balancers=["${element(split(",", format("%s,%s",aws_elb.webserver-elb1.id,aws_elb.webserver-elb2.id)), var.asg1_lb)}"]
 }
 
 resource "aws_autoscaling_group" "web2" {
-	min_size=1
-	max_size=3
-	desired_capacity=2
+	min_size="${var.asg2_min_size}"
+	max_size="${var.asg2_max_size}"
+	desired_capacity="${var.asg2_desired_capacity}"
 	health_check_grace_period=300
 	launch_configuration="${aws_launch_configuration.lc2.id}"
 	vpc_zone_identifier=["${split(",",data.terraform_remote_state.vpc.private_subnets)}"]
-	load_balancers=["${element(split(",", format("%s,%s",aws_elb.webserver-elb1.id,aws_elb.webserver-elb2.id)), 1 + var.inbalance_lb)}"]
+	load_balancers=["${element(split(",", format("%s,%s",aws_elb.webserver-elb1.id,aws_elb.webserver-elb2.id)), var.asg2_lb)}"]
 }
 
 ##################

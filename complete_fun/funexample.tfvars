@@ -1,0 +1,7 @@
+vpc_cidr = "10.199.0.0/16"
+vpc_region="us-east-1"
+vpc_az="c,d,e"
+rds_size = "db.t2.large"
+rds_username = "whosthat"
+rds_password = "donttellanyonethis"
+ami_id = "ami-b73b63a0"

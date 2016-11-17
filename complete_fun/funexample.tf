@@ -177,12 +177,12 @@ resource "aws_instance" "bastion_host" {
 
 # Create the SNS/SQS START
 resource "aws_sns_topic" "autoscale_notifications" {
-    name = "autoscale_notifications"
-    display_name = "autoscale_notifications"
+    name = "autoscale_notifications_fun"
+    display_name = "autoscale_notifications_fun"
 }
 
 resource "aws_sqs_queue" "autoscale_watcher" {
-    name = "autoscale_watcher"
+    name = "autoscale_watcher_fun"
     visibility_timeout_seconds = 120
 }
 

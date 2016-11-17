@@ -1,8 +1,8 @@
 {
 	"environment": "Fun Demo",
-	"tf_file_path":"scripts/complete-fun",
+	"tf_file_path":"scripts/complete_fun",
 	"variable_path":"scripts/complete_fun",
-	"variable_files":["funxample.tfvars"],
+	"variable_files":["funexample.tfvars"],
 	"inline_variables":{
 		"aws_ssh_key_path":"${ENV['AWS_SSH_KEY_PATH']}",
 		"aws_ssh_key_name": "${ENV['AWS_SSH_KEY_NAME']}",
@@ -13,7 +13,7 @@
 		"config": {
 			"region":"us-east-1",
 			"bucket":"randy-terraform-bucket",
-			"key":"presentation/complete_fun/terraform.tfstate"
+			"key":"presentation/complete/terraform.tfstate"
 		}
 	},
 	"custom_args":["-parallelism=10"]

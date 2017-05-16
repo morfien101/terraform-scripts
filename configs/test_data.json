@@ -1,10 +1,8 @@
 {
 	"environment": "AWS Training",
-	"tf_file_path":"scripts/aws_training_bastion",
-	"variable_path":"scripts/aws_training_bastion",
-	"variable_files":["bastion.tfvars"],
+	"tf_file_path":"scripts/test_data",
+	"variable_path":"scripts/test_data",
 	"inline_variables":{
-		"aws_ssh_key_name": "${ENV['AWS_SSH_KEY_NAME']}",
 		"tfstate_bucket": "randy-terraform-bucket",
 		"vpc_region": "us-east-1"
 	},
@@ -13,7 +11,7 @@
 		"config": {
 			"region":"us-east-1",
 			"bucket":"randy-terraform-bucket",
-			"key":"aws_training/bastion/terraform.tfstate"
+			"key":"aws_training/testdata/terraform.tfstate"
 		}
 	},
 	"custom_args":["-parallelism=10"]

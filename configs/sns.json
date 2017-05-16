@@ -14,5 +14,6 @@
 			"key":"aws_training/sns/terraform.tfstate"
 		}
 	},
+	"modules_required": true,
 	"custom_args":["-parallelism=10"]
 }

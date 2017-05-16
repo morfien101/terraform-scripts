@@ -1,0 +1,35 @@
+
+
+{
+	"environment": "AWS Training",
+	"tf_file_path":"scripts/aws_ecs",
+	"variable_path":"scripts/aws_ecs",
+	"inline_variables":{
+		"aws_ssh_key_path": "${ENV['AWS_SSH_KEY_PATH']}",
+		"aws_ssh_key_name": "${ENV['AWS_SSH_KEY_NAME']}",
+		"tfstate_bucket": "randy-terraform-bucket",
+		"tfregion":"us-east-1",
+		"aws_region":"us-east-1",
+		"ecs_name": "randy-ecs",
+    "ecs_instance_type": "m4.xlarge",
+		"ecs_spot_price": "0.08",
+    "ec2_key_name": "randy-aws-training",
+    "asg_min": "1",
+		"asg_desired": "2",
+		"asg_max": "5",
+		"task_template_image_url": "morfien101/go_rage_online",
+		"task_template_image_version":"1.0.2",
+		"task_template_container_name":"go_rage_online",
+		"go_rage_online_deregistration_delay": 0,
+		"go_rage_online_desired_count": "2"
+	},
+	"state_file":{
+		"type":"s3",
+		"config": {
+			"region":"us-east-1",
+			"bucket":"randy-terraform-bucket",
+			"key":"aws_training/ecs/terraform.tfstate"
+		}
+	},
+	"custom_args":["-parallelism=10"]
+}

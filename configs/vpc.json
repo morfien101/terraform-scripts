@@ -3,6 +3,10 @@
 	"tf_file_path":"scripts/aws_training_vpc",
 	"variable_path":"scripts/aws_training_vpc",
 	"variable_files":["vpc.tfvars"],
+	"inline_variables": {
+		"vpc_region": "us-east-1",
+		"vpc_cidr": "10.199.0.0/16"
+	},
 	"state_file":{
 		"type":"s3",
 		"config": {

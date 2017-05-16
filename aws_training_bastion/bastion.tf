@@ -3,6 +3,11 @@ variable "tfstate_bucket" {}
 variable "ami_id" {}
 variable "aws_ssh_key_name" {}
 
+terraform {
+  backend "s3"{
+  }
+}
+
 provider "aws" {
     region = "${var.vpc_region}"
 }
@@ -14,6 +19,13 @@ data "terraform_remote_state" "vpc" {
 		bucket = "${var.tfstate_bucket}"
 		key = "aws_training/vpc/terraform.tfstate"
 	}
+}
+
+data "aws_subnet_ids" "public_subnets" {
+  vpc_id = "${data.terraform_remote_state.vpc.aws_vpc_vpc1_id}"
+  tags {
+    Tier = "Public"
+  }
 }
 
 resource "aws_security_group" "bastion" {
@@ -38,7 +50,7 @@ resource "aws_security_group" "bastion" {
 resource "aws_instance" "bastion_host" {
     ami = "${var.ami_id}"
     instance_type = "t2.micro"
-    subnet_id="${element(split(",",data.terraform_remote_state.vpc.public_subnets), 1)}"
+    subnet_id="${data.aws_subnet_ids.public_subnets.ids[1]}"
     vpc_security_group_ids=["${aws_security_group.bastion.id}"]
     key_name = "${var.aws_ssh_key_name}"
     tags = {

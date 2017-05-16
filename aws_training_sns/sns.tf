@@ -1,6 +1,11 @@
 variable "vpc_region" {}
 variable "tfstate_bucket" {}
 
+terraform {
+  backend "s3"{
+  }
+}
+
 provider "aws" {
     region = "${var.vpc_region}"
 }
@@ -49,7 +54,7 @@ resource "aws_sns_topic_subscription" "autoscale_notifications_sqs" {
 	topic_arn = "${aws_sns_topic.autoscale_notifications.arn}"
 	protocol = "sqs"
 	endpoint = "${aws_sqs_queue.autoscale_watcher.arn}"
-	
+
 }
 
 output "aws_sns_topic_autoscale_notifications_arn" {

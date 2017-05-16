@@ -4,6 +4,11 @@ variable "vpc_az" {}
 #We need this in other scripts to make ARNs
 # variable "aws_account_number" {}
 
+terraform {
+  backend "s3"{
+  }
+}
+
 provider "aws" {
     region = "${var.vpc_region}"
 }
@@ -12,28 +17,32 @@ resource "aws_vpc" "vpc1" {
     cidr_block = "${var.vpc_cidr}"
     enable_dns_hostnames = true
     tags {
-        Owner = "Randy"
+        Owner = "Randy Tests"
         Name = "Randy AWS Training"
     }
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_subnet" "private" {
     count = 3
     vpc_id = "${aws_vpc.vpc1.id}"
-    availability_zone = "${var.vpc_region}${element(split(",",var.vpc_az),count.index)}"
+    availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
     cidr_block = "${cidrsubnet(var.vpc_cidr,8,count.index + 1)}"
     tags {
-        Name = "Private Subnet ${count.index}"
+        Name = "Private Subnet ${count.index+1}"
+        Tier = "Private"
     }
 }
 
 resource "aws_subnet" "public" {
     count = 3
-    availability_zone = "${var.vpc_region}${element(split(",",var.vpc_az),count.index)}"
+    availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
     vpc_id = "${aws_vpc.vpc1.id}"
     cidr_block = "${cidrsubnet(var.vpc_cidr,8,count.index + 51)}"
     tags {
-        Name = "Public Subnet ${count.index}"
+        Name = "Public Subnet ${count.index+1}"
+        Tier = "Public"
     }
 }
 
@@ -102,7 +111,3 @@ output "public_subnets" {
 output "private_subnets" {
     value="${join(",",aws_subnet.private.*.id)}"
 }
-
-#output "aws_account_number" {
-#    value="${var.aws_account_number}"
-#}
